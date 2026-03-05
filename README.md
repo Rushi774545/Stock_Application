@@ -42,6 +42,22 @@ StockMap/
   - Theme: [frontend/src/theme.js](file:///r:/Intern%20Biz/StockMap/Stock/frontend/src/theme.js)
   - Styles: [frontend/src/index.css](file:///r:/Intern%20Biz/StockMap/Stock/frontend/src/index.css)
 
+### New: Stock Analysis Page
+
+- Route: `/stock-analysis`
+- Dark, interactive chart that shows historical series and a forecast continuation in a distinct color and dashed style
+- Controls:
+  - Predictive Asset: NIFTY 50 (`^NSEI`), SENSEX (`^BSESN`), GOLD (`GC=F`), SILVER (`SI=F`), `BTC-USD`
+  - Index + Stock (from Index): pick a ticker from NIFTY50 or SENSEX30 lists
+  - Intelligence Model: ARIMA, Linear Regression, RNN‑like, CNN‑like
+  - Range Type: Hourly / Monthly / Yearly
+  - Time Range:
+    - Hourly: 24h, 48h, 7d
+    - Monthly: 6mo, 1y, 3y, 5y
+    - Yearly: 1y, 2y, 3y, 5y, 10y
+  - Prediction Horizon per range type (e.g., next 12h, next 6 months, next 5 years)
+- Forecasts are “wavy” by design: a light cyclic component is added to trend projections to follow recent rhythms.
+
 
 ## Installation
 
@@ -74,7 +90,7 @@ python Stock/manage.py runserver 0.0.0.0:8001
 
 Notes
 - CORS is allowed for development via django-cors-headers.
-- If you prefer a different port, update the frontend’s axios base URL in frontend/src/App.jsx.
+- Frontend targets `http://localhost:8001/api` by default. To override, set `VITE_API_URL` before starting the dev server.
 
 ### Frontend (Vite + React)
 
@@ -94,6 +110,16 @@ npm run dev
 ```
 
 Open the app at the printed local URL (commonly http://localhost:5173 or the next free port).
+
+### Config
+
+- To point the frontend at a different API:
+
+```
+# PowerShell
+$env:VITE_API_URL="http://localhost:8001/api"
+npm run dev
+```
 
 
 ## Running the App
@@ -126,11 +152,24 @@ Stocks
 - GET `/stocks/?page=1&page_size=20&search=AAPL` → paginated stocks
 - POST `/stocks/` → refresh default tickers; returns { saved, errors }
 - GET `/stocks/<ticker>/history/?period=6mo` → OHLC, volume, PE series (fallback demo data if live data unavailable)
+- GET `/stocks/index/?name=nifty50|sensex|gold|silver|commodities` → index constituents or commodity set
 
 Holdings (auth required: `Authorization: Token <token>`)
 - GET `/holdings/` → list user holdings
 - POST `/holdings/buy/` with JSON `{ ticker, quantity, price }`
 - POST `/holdings/sell/` with JSON `{ ticker, quantity }`
+
+Stock Analysis
+- GET `/analysis/forecast/` → returns historical series + forecast
+  - Query params:
+    - `ticker` (e.g., `RELIANCE.NS`, `^NSEI`, `GC=F`, `BTC-USD`)
+    - `scale` = `hourly|monthly|yearly`
+    - `history` by scale:
+      - hourly: `24h|48h|7d`
+      - monthly: `6mo|1y|3y|5y`
+      - yearly: `1y|2y|3y|5y|10y`
+    - `model` = `arima|linear|rnn|cnn`
+    - `horizon` = integer steps ahead (hours, months, or years)
 
 
 ## Frontend Features
@@ -141,6 +180,8 @@ Holdings (auth required: `Authorization: Token <token>`)
 - “Refresh 10 Stocks” triggers backend snapshot
 - Stock detail with two charts: Close and PE
 - Dark theme with glass cards, glow, tilt‑on‑hover, and animated route transitions
+- Portfolio analytics with weighted value time series (1y/1mo/1h), per‑stock chart with forecast, and a portfolio‑level recommendation
+- Stock Analysis page with model selection, index‑based stock picker, and wavy price forecast
 
 
 ## Data & Fallbacks
@@ -161,6 +202,8 @@ Holdings (auth required: `Authorization: Token <token>`)
   - First GET seeds the table if empty; if network is blocked, demo data is generated so the grid is never empty.
 - History chart 500
   - The endpoint now returns safe demo data if live history is unavailable; refresh and try again.
+- Forecast looks flat
+  - Switch models or ensure sufficient recent history; forecasts include a cyclic overlay to produce a trajectory similar to recent movements.
 
 
 ## Notes
@@ -175,4 +218,3 @@ Holdings (auth required: `Authorization: Token <token>`)
 - Sorting and advanced filters server‑side (e.g., PE ranges, volume thresholds)
 - Theme toggle and reduced‑motion preference
 - Watchlists and alerts
-

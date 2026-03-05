@@ -9,13 +9,13 @@ class Portfolio(models.Model):
 
 
 class Holding(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="holdings")
+    portfolio = models.ForeignKey(Portfolio, on_delete=models.CASCADE, related_name="holdings")
     ticker = models.CharField(max_length=16)
     quantity = models.IntegerField()
     avg_price = models.DecimalField(max_digits=20, decimal_places=4, null=True, blank=True)
 
     class Meta:
-        unique_together = ("user", "ticker")
+        unique_together = ("portfolio", "ticker")
 
 
 class Stock(models.Model):
